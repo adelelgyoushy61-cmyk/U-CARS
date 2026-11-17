@@ -1,3 +1,10 @@
+// إعدادات عامة للموقع — متاحة عبر window.SITE_CONFIG
+window.SITE_CONFIG = Object.freeze({
+  phoneDisplay: "+966 55 939 4214",
+  phoneTelHref: "tel:+966559394214",
+  phoneWhatsapp: "966559394214", // بدون + وبدون مسافات (متطلب رابط wa.me)
+});
+
 (() => {
   "use strict";
 
@@ -173,6 +180,18 @@
           قطع غيار ${escapeHtml(brand.origin)}
         </span>
       </div>`;
+
+    // عند الضغط على الماركة: تعبئة اسم السيارة في الفورم والتمرير إليه
+    slide.addEventListener("click", () => {
+      const carTypeInput = document.getElementById("car-type");
+      const quoteForm = document.getElementById("quote-form");
+      if (carTypeInput && quoteForm) {
+        carTypeInput.value = brand.name;
+        quoteForm.scrollIntoView({ behavior: "smooth", block: "center" });
+        setTimeout(() => carTypeInput.focus(), 600);
+      }
+    });
+
     return slide;
   }
 
@@ -190,10 +209,10 @@
     brands.forEach((brand) => fragment.appendChild(buildBrandCard(brand)));
     container.appendChild(fragment);
 
-    initSwiper();
+    initSwiper(brands.length);
   }
 
-  function initSwiper() {
+  function initSwiper(slidesCount = 0) {
     if (swiperInstance) {
       swiperInstance.destroy(true, true);
       swiperInstance = null;
@@ -201,11 +220,14 @@
 
     if (typeof Swiper === "undefined") return;
 
+    // تفعيل الـ loop فقط إذا كان عدد الشرائح أكبر من الحد الأقصى للعرض (6)
+    const canLoop = slidesCount > 6;
+
     swiperInstance = new Swiper(".carSwiper", {
-      loop: true,
+      loop: canLoop,
       grabCursor: true,
       spaceBetween: 16,
-      speed: 4000,
+      speed: 3500,
       slidesPerView: 2,
       breakpoints: {
         480: { slidesPerView: 3, spaceBetween: 16 },
@@ -259,7 +281,6 @@
         : "fa-solid fa-xmark text-2xl";
     });
 
-    // إغلاق القائمة تلقائياً عند الضغط على أي رابط بداخلها
     menu.querySelectorAll("a").forEach((link) => {
       link.addEventListener("click", () => {
         menu.classList.add("hidden");
@@ -280,7 +301,6 @@
       toggle.addEventListener("click", () => {
         const isOpen = !content.classList.contains("hidden");
 
-        // إغلاق كل الأسئلة الأخرى المفتوحة (اختياري: سلوك أكورديون نظيف)
         toggles.forEach((otherToggle) => {
           if (otherToggle === toggle) return;
           otherToggle.nextElementSibling.classList.add("hidden");
@@ -295,8 +315,7 @@
     });
   }
 
-  // 4) قوائم السنوات (سنة إصدار/انتهاء الرخصة) //
- 
+  // 4) قوائم السنوات (سنة انتهاء الرخصة) //
   function populateYearSelect(selectId, { fromYear, toYear }) {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -311,49 +330,46 @@
 
   function initYearSelects() {
     const currentYear = new Date().getFullYear();
-    populateYearSelect("issueYear", {
-      fromYear: currentYear - 20,
-      toYear: currentYear,
-    });
     populateYearSelect("expiryYear", {
-      fromYear: currentYear,
+      fromYear: currentYear - 5, // السماح باختيار رخص منتهية أيضاً
       toYear: currentYear + 10,
     });
   }
 
-  // 5) نموذج طلب التسعير → إرسال واتساب //
+  // 5) نموذج طلب التسعير -> إرسال واتساب //
   function initQuoteForm() {
     const form = document.getElementById("quote-form");
     const sendBtn = document.getElementById("send-whatsapp-btn");
     if (!form || !sendBtn) return;
 
     sendBtn.addEventListener("click", () => {
-const name = document.getElementById("customer-name").value.trim();
-const mobile = document.getElementById("customer-mobile").value.trim();
-const carType = document.getElementById("car-type").value.trim();
-const carYear = document.getElementById("car-year").value.trim();
-const expiryYear = document.getElementById("expiryYear").value;
-const details = document.getElementById("car-details").value.trim();
+      const name = document.getElementById("customer-name")?.value.trim() || "";
+      const mobile = document.getElementById("customer-mobile")?.value.trim() || "";
+      const carType = document.getElementById("car-type")?.value.trim() || "";
+      const carYear = document.getElementById("car-year")?.value.trim() || "";
+      const expiryYear = document.getElementById("expiryYear")?.value || "";
+      const details = document.getElementById("car-details")?.value.trim() || "";
+
       if (!name || !mobile) {
         alert("الرجاء إدخال الاسم ورقم الجوال على الأقل قبل الإرسال.");
         return;
       }
 
-      const saudiMobilePattern = /^0?5\d{8}$/;
-      if (!saudiMobilePattern.test(mobile.replace(/\s/g, ""))) {
+      const saudiMobilePattern = /^(05|5|\+9665|009665)\d{8}$/;
+      if (!saudiMobilePattern.test(mobile.replace(/\s|-/g, ""))) {
         alert("الرجاء إدخال رقم جوال سعودي صحيح (مثال: 05xxxxxxxx).");
         return;
       }
 
-  const lines = [
-  "أهلاً تشليح الرياض، أرغب بتسعير سيارتي:",
-  `👤 الاسم: ${name}`,
-  `📱 الجوال: ${mobile}`,
-  carType && `🚗 نوع السيارة: ${carType}`,
-  carYear && `📅 موديل السنة: ${carYear}`,
-  expiryYear && `📄 سنة انتهاء الرخصة: ${expiryYear}`,
-  details && `📝 التفاصيل: ${details}`,
-].filter(Boolean);
+      const lines = [
+        "أهلاً تشليح الرياض، أرغب بتسعير سيارتي:",
+        `👤 الاسم: ${name}`,
+        `📱 الجوال: ${mobile}`,
+        carType && `🚗 نوع السيارة: ${carType}`,
+        carYear && `📅 موديل السنة: ${carYear}`,
+        expiryYear && `📄 سنة انتهاء الرخصة: ${expiryYear}`,
+        details && `📝 التفاصيل: ${details}`,
+      ].filter(Boolean);
 
       const message = encodeURIComponent(lines.join("\n"));
       const whatsappNumber =
@@ -361,7 +377,7 @@ const details = document.getElementById("car-details").value.trim();
       window.open(
         `https://wa.me/${whatsappNumber}?text=${message}`,
         "_blank",
-        "noopener,noreferrer",
+        "noopener,noreferrer"
       );
     });
   }
@@ -384,7 +400,6 @@ const details = document.getElementById("car-details").value.trim();
   }
 
   function initDarkMode() {
- 
     updateThemeIcons(document.documentElement.classList.contains("dark"));
 
     const toggleButtons = [
@@ -406,7 +421,7 @@ const details = document.getElementById("car-details").value.trim();
       });
   }
 
-  // 7) Scroll Reveal (IntersectionObserver)
+  // 7) Scroll Reveal (IntersectionObserver) //
   function initScrollReveal() {
     const revealEls = document.querySelectorAll(".reveal");
     if (!revealEls.length) return;
@@ -425,13 +440,49 @@ const details = document.getElementById("car-details").value.trim();
           }
         });
       },
-      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
     );
 
     revealEls.forEach((el) => observer.observe(el));
   }
 
-  // 8) نقطة البداية //
+  // 8) حماية المحتوى مع السماح بالكتابة الطبيعية داخل الفورم //
+  function initContentProtection() {
+    const isInputField = (target) =>
+      target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA");
+
+    document.addEventListener("contextmenu", (e) => {
+      if (!isInputField(e.target)) e.preventDefault();
+    });
+
+    document.addEventListener("selectstart", (e) => {
+      if (!isInputField(e.target)) e.preventDefault();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      const key = e.key.toLowerCase();
+
+      // السماح بالنسخ واللصق والتحديد داخل حقول الإدخال
+      if (
+        e.ctrlKey &&
+        ["c", "x", "a", "s"].includes(key) &&
+        !isInputField(e.target)
+      ) {
+        e.preventDefault();
+      }
+
+      // منع F12 و أدوات المطورين وعرض السورس
+      if (
+        e.key === "F12" ||
+        (e.ctrlKey && e.shiftKey && ["i", "j", "c"].includes(key)) ||
+        (e.ctrlKey && key === "u")
+      ) {
+        e.preventDefault();
+      }
+    });
+  }
+
+  // 9) نقطة البداية //
   document.addEventListener("DOMContentLoaded", () => {
     renderBrands("all");
     initBrandTabs();
@@ -441,42 +492,8 @@ const details = document.getElementById("car-details").value.trim();
     initQuoteForm();
     initDarkMode();
     initScrollReveal();
+    initContentProtection();
   });
 
   window.filterCars = filterCars;
 })();
-
-// إعدادات عامة للموقع — عدّل هنا فقط عند تغيير رقم الجوال //
-const SITE_CONFIG = Object.freeze({
-  phoneDisplay: "+966 55 939 4214",
-  phoneTelHref: "tel:+966559394214",
-  phoneWhatsapp: "966559394214", // بدون + وبدون مسافات (متطلب رابط wa.me) //
-});
-
-
-  // 1. منع الكليك يمين //
-  document.addEventListener('contextmenu', e => e.preventDefault());
-
-  // 2. منع تحديد النصوص واختصارات النسخ والقص //
-  document.addEventListener('selectstart', e => e.preventDefault());
-  document.addEventListener('keydown', e => {
-    if (e.ctrlKey && (e.key === 'c' || e.key === 'x' || e.key === 'a' || e.key === 's')) {
-      e.preventDefault();
-    }
-  });
-
-  // 3. منع فتح الـ Inspect وأدوات المطورين وعرض السورس كود //
-  document.addEventListener('keydown', e => {
-    // منع F12
-    if (e.key === 'F12') e.preventDefault();
-    
-    // منع Ctrl+Shift+I و Ctrl+Shift+J و Ctrl+Shift+C //
-    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C' || e.key === 'i' || e.key === 'j' || e.key === 'c')) {
-      e.preventDefault();
-    }
-    
-    // منع Ctrl+U (عرض سورس الصفحة) //
-    if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
-      e.preventDefault();
-    }
-  });

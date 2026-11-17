@@ -1,14 +1,6 @@
 /* ==========================================================
-   Base / Reset
+   Base & Smooth Scroll
    ========================================================== */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
 html {
   scroll-behavior: smooth;
 }
@@ -27,10 +19,19 @@ footer,
 body {
   font-family: "Tajawal", sans-serif;
   direction: rtl;
- -webkit-user-select: none; /* Safari */
-  -moz-user-select: none;    /* Firefox */
-  -ms-user-select: none;     /* IE10+ */
-  user-select: none;         /* Standard */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+select {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
 }
 
 /* ==========================================================
@@ -70,16 +71,14 @@ html.dark .tab-btn:not(.active):hover {
 }
 
 /* ==========================================================
-   Swiper — تخصيص
+   Swiper — تخصيص الحركة والـ Pagination
    ========================================================== */
-.swiper-pagination-bullet-active {
-  background: #ff6600 !important;
+.carSwiper .swiper-wrapper {
+  transition-timing-function: linear !important;
 }
 
-.swiper-button-next::after,
-.swiper-button-prev::after {
-  font-size: 1rem !important;
-  font-weight: 900;
+.swiper-pagination-bullet-active {
+  background: #ff6600 !important;
 }
 
 .car-card {
@@ -118,21 +117,4 @@ html.dark .tab-btn:not(.active):hover {
     transform: none;
     transition: none;
   }
-}
-
-/* ==========================================================
-   Floating mobile CTA — تجنّب تغطية آخر قسم في الصفحة
-   ========================================================== */
-@media (max-width: 768px) {
-  section:last-of-type {
-    padding-bottom: 96px;
-  }
-}
-
-
-input, textarea {
-  -webkit-user-select: text;
-  -moz-user-select: text;
-  -ms-user-select: text;
-  user-select: text;
 }
